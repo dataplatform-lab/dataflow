@@ -1,0 +1,55 @@
+- name: Add certmanager chart repository
+  kubernetes.core.helm_repository:
+    name: cert-manager
+    repo_url: https://charts.jetstack.io
+
+- name: Install certmanager
+  kubernetes.core.helm:
+    name: cert-manager
+    chart_ref: cert-manager/cert-manager
+    chart_version: "{{certmanager_version}}"
+    release_namespace: cert-manager
+    create_namespace: true
+    values:
+      installCRDs: true
+      featureGates: "ExperimentalGatewayAPISupport=True"
+      extraArgs:
+        - --dns01-recursive-nameservers-only
+        - --dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53
+        - "--logging-format=json"
+      webhook:
+        extraArgs:
+          - "--logging-format=json"
+      cainjector:
+        extraArgs:
+          - "--logging-format=json"
+
+- name: Wait cert-manager pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    label_selectors:
+      - app=cert-manager
+    namespace: cert-manager
+    wait: true
+    wait_condition:
+      type: Ready
+
+- name: Wait cainjector pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    label_selectors:
+      - app=cainjector
+    namespace: cert-manager
+    wait: true
+    wait_condition:
+      type: Ready
+
+- name: Wait webhook pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    label_selectors:
+      - app.kubernetes.io/name=webhook
+    namespace: cert-manager
+    wait: true
+    wait_condition:
+      type: Ready

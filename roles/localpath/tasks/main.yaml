@@ -1,0 +1,4 @@
+- name: Install local-path-provisioner
+  kubernetes.core.k8s:
+    state: present
+    template: localpath.yaml.j2

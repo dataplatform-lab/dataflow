@@ -1,0 +1,8 @@
+- name: Configure crio
+  shell:
+    cmd: nvidia-ctk runtime configure --runtime=crio --set-as-default
+
+- name: Restart crio service
+  service:
+    name: crio
+    state: restarted

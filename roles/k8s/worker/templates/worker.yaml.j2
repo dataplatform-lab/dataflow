@@ -1,0 +1,12 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: JoinConfiguration
+discovery:
+  bootstrapToken:
+    apiServerEndpoint: {{k8s_apiserver_ip if k8s_apiserver_ip is defined else hostvars[groups['master'][0]]['ansible_host']}}:6443
+    token: abc123.abcdefgh12345678
+    unsafeSkipCAVerification: true
+  timeout: 5m0s
+  tlsBootstrapToken: abc123.abcdefgh12345678
+nodeRegistration:
+  criSocket: unix:///var/run/crio/crio.sock
+caCertPath: /etc/kubernetes/pki/ca.crt

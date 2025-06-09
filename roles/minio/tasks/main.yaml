@@ -1,0 +1,14 @@
+- name: Install minio
+  kubernetes.core.k8s:
+    state: present
+    template: minio.yaml.j2
+
+- name: Wait minio pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    label_selectors:
+      - app=minio
+    namespace: minio
+    wait: true
+    wait_condition:
+      type: Ready

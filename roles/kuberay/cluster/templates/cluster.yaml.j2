@@ -1,0 +1,70 @@
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: raycluster
+  namespace: kuberay
+spec:
+  rayVersion: "{{ray_version}}"
+  headGroupSpec:
+    serviceType: ClusterIP
+    rayStartParams:
+      dashboard-host: "0.0.0.0"
+    template:
+      metadata:
+        labels: {}
+      spec:
+        containers:
+          - name: ray-head
+            image: rayproject/ray:{{ray_version}}
+            ports:
+              - containerPort: 6379
+                name: gcs
+              - containerPort: 8265
+                name: dashboard
+              - containerPort: 10001
+                name: client
+            volumeMounts:
+              - mountPath: /tmp/ray
+                name: ray-logs
+            resources:
+              limits:
+                cpu: "{{ray_headgroup_limits_cpu}}"
+                memory: "{{ray_headgroup_limits_memory}}"
+              requests:
+                cpu: "{{ray_headgroup_requests_cpu}}"
+                memory: "{{ray_headgroup_requests_memory}}"
+        volumes:
+          - name: ray-logs
+            emptyDir: {}
+  workerGroupSpecs:
+    - replicas: {{ray_workergroup_replicas}}
+      minReplicas: {{ray_workergroup_min_replicas}}
+      maxReplicas: {{ray_workergroup_max_replicas}}
+      groupName: "{{ray_workergroup_name}}"
+      rayStartParams: {}
+      template:
+        spec:
+          containers:
+            - name: ray-worker
+              image: rayproject/ray:{{ray_version}}-gpu
+              volumeMounts:
+                - mountPath: /tmp/ray
+                  name: ray-logs
+              resources:
+                limits:
+                  cpu: "{{ray_workergroup_limits_cpu}}"
+                  memory: "{{ray_workergroup_limits_memory}}"
+{% if ray_workergroup_limits_gpu is defined %}
+                  nvidia.com/gpu: "{{ray_workergroup_limits_gpu}}"
+{% endif %}
+                requests:
+                  cpu: "{{ray_workergroup_requests_cpu}}"
+                  memory: "{{ray_workergroup_requests_memory}}"
+{% if ray_workergroup_requests_gpu is defined %}
+                  nvidia.com/gpu: "{{ray_workergroup_requests_gpu}}"
+{% endif %}
+          volumes:
+            - name: ray-logs
+              emptyDir: {}

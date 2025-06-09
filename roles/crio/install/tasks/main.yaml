@@ -1,0 +1,68 @@
+- name: Validate variable crio
+  assert:
+    that:
+      - crio_version is string
+      - crictl_version is string
+
+- name: Create /etc/apt/keyrings
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Create crio short version
+  set_fact:
+    crio_version_short: v{{".".join(k8s_version.split(".")[0:2])}}
+
+- name: Download the public signing key for the crio package repositories
+  apt_key:
+    url: "https://pkgs.k8s.io/addons:/cri-o:/stable:/{{crio_version_short}}/deb/Release.key"
+    keyring: /etc/apt/keyrings/cri-o-apt-keyring.gpg
+    state: present
+
+- name: Add the appropriate crio apt repository
+  apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/stable:/{{crio_version_short}}/deb/ /"
+    state: present
+    filename: cri-o
+
+- name: Install crio packages
+  apt:
+    name: "{{item}}"
+    state: present
+    update_cache: true
+  with_items:
+    - cri-o={{crio_version}}
+
+- name: Hold package update
+  command: apt-mark hold cri-o
+  changed_when: true
+
+- name: Get crictl
+  get_url:
+    url: https://github.com/kubernetes-sigs/cri-tools/releases/download/{{crictl_version}}/crictl-{{crictl_version}}-linux-amd64.tar.gz
+    dest: /tmp/crictl-{{crictl_version}}-linux-amd64.tar.gz
+    mode: "0644"
+
+- name: Unarchive crictl
+  unarchive:
+    src: /tmp/crictl-{{crictl_version}}-linux-amd64.tar.gz
+    dest: /usr/bin/
+    remote_src: true
+
+- name: Delete crictl tar file
+  file:
+    path: /tmp/crictl-{{crictl_version}}-linux-amd64.tar.gz
+    state: absent
+
+- name: Copy the crio configuration file to server location
+  copy:
+    src: crio.conf
+    dest: /etc/crio/crio.conf
+    mode: "0644"
+
+- name: Enable crio service
+  service:
+    name: crio
+    state: restarted
+    enabled: true

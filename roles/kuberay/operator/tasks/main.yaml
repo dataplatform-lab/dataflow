@@ -1,0 +1,12 @@
+- name: Add kuberay chart repository
+  kubernetes.core.helm_repository:
+    name: kuberay
+    repo_url: https://ray-project.github.io/kuberay-helm/
+
+- name: Install kuberay operator
+  kubernetes.core.helm:
+    name: kuberay-operator
+    chart_ref: kuberay/kuberay-operator
+    chart_version: "{{kuberay_version}}"
+    release_namespace: kuberay
+    create_namespace: true

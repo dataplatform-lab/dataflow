@@ -1,0 +1,14 @@
+- name: Copy the kubeadm configuration file to server location
+  template:
+    src: '{{k8s_kubeadm_config | default("worker.yaml.j2")}}'
+    dest: /tmp/kubeadm-config.yaml
+    mode: "0644"
+
+- name: Join the node to cluster
+  command: kubeadm join --config /tmp/kubeadm-config.yaml
+  register: kubeadm_output
+  changed_when: true
+
+- name: Show kubeadm output
+  debug:
+    var: kubeadm_output.stdout_lines

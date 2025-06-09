@@ -1,0 +1,40 @@
+all:
+  vars:
+    ansible_user: haruband
+    ansible_password: kk3249
+    ansible_become_password: kk3249
+    crio_version: 1.29.1-1.1
+    crictl_version: v1.29.0
+    nvidia_version: "550"
+    k8s_cluster_name: node3
+    k8s_cluster_version: v1.29.1
+    k8s_version: 1.29.1-1.1
+    k8s_swap_behavior: UnlimitedSwap
+    k8s_apiserver_ip: 192.168.1.150
+    k8s_service_subnet: 172.16.0.0/16
+    k8s_pod_subnet: 10.0.0.0/8
+    k8s_pod_subnet_masksize: 24
+    kubeconfig_file: ~/.kube/config
+    linux_swap_size: 128G
+    linux_swap_path: /opt/swapfile
+    linux_limits_config: limits.conf
+  hosts:
+    node0:
+      ansible_host: 192.168.1.150
+    node1:
+      ansible_host: 192.168.1.151
+    node2:
+      ansible_host: 192.168.1.152
+  children:
+    master:
+      hosts:
+        node0:
+    worker:
+      hosts:
+        node1:
+        node2:
+    gpu:
+      hosts:
+        node0:
+        node1:
+        node2:

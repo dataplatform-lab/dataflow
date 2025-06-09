@@ -1,0 +1,136 @@
+- name: Install helm
+  hosts: master
+  become: true
+  tags: helm
+  roles:
+    - helm
+
+- name: Install cilium
+  hosts: master
+  tags: cilium
+  roles:
+    - cilium/install
+
+- name: Install local-path-provisioner
+  hosts: master
+  tags: localpath
+  roles:
+    - localpath
+
+- name: Install gateway api
+  hosts: master
+  tags: gateway
+  roles:
+    - gateway
+
+- name: Install certmanager
+  hosts: master
+  tags: certmanager
+  roles:
+    - certmanager/install
+
+- name: Install self-signed cluster issuer
+  hosts: master
+  tags: certmanager
+  roles:
+    - certmanager/selfsigned
+
+- name: Prepare infisical
+  hosts: master
+  tags: infisical
+  roles:
+    - infisical/prepare
+
+- name: Install infisical
+  hosts: master
+  tags: infisical
+  roles:
+    - infisical/install
+
+- name: Install external-secrets
+  hosts: master
+  tags: infisical
+  roles:
+    - externalsecrets/install
+
+- name: Register infisical secret store
+  hosts: master
+  tags: infisical
+  roles:
+    - externalsecrets/infisical
+
+- name: Install minio
+  hosts: master
+  tags: minio
+  roles:
+    - minio
+
+- name: Install quickwit
+  hosts: master
+  tags: quickwit
+  roles:
+    - quickwit/prepare
+    - quickwit/install
+
+- name: Install opentelemetry
+  hosts: master
+  tags: opentelemetry
+  roles:
+    - opentelemetry/install
+
+- name: Install prometheus
+  hosts: master
+  tags: prometheus
+  roles:
+    - prometheus/install
+
+- name: Install grafana
+  hosts: master
+  tags: grafana
+  roles:
+    - grafana/install
+
+- name: Install nvidia
+  hosts: master:slave:worker
+  become: true
+  tags: nvidia
+  roles:
+    - nvidia/install
+
+- name: Setup crio
+  hosts: master:slave:worker
+  become: true
+  tags: nvidia
+  roles:
+    - nvidia/crio
+
+- name: Set 'nvidia.com/gpu.present' label to gpu nodes
+  hosts: master
+  tags: nvidia
+  roles:
+    - nvidia/set-label
+
+- name: Install nvidia-device-plugin
+  hosts: master
+  tags: nvidia
+  roles:
+    - nvidia/device-plugin
+
+- name: Install kuberay operator
+  hosts: master
+  tags: kuberay
+  roles:
+    - kuberay/operator
+
+- name: Install kuberay cluster
+  hosts: master
+  tags: kuberay
+  roles:
+    - kuberay/cluster
+
+- name: Install emqx
+  hosts: master
+  tags: emqx
+  roles:
+    - emqx/operator
+    - emqx/install

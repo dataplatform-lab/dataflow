@@ -1,0 +1,23 @@
+- name: Check variables are defined
+  assert:
+    that:
+      - linux_swap_path is string
+
+- name: Remove swapfile from /etc/fstab
+  ansible.posix.mount:
+    name: "{{item}}"
+    fstype: swap
+    state: absent
+  with_items:
+    - swap
+    - none
+
+- name: Swap off
+  command: swapoff -a
+  changed_when: true
+
+- name: Remove swap file
+  file:
+    path: "{{linux_swap_path}}"
+    state: absent
+  failed_when: false

@@ -1,0 +1,62 @@
+- name: Add opentelemetry chart repository
+  kubernetes.core.helm_repository:
+    name: open-telemetry
+    repo_url: https://open-telemetry.github.io/opentelemetry-helm-charts
+
+- name: Install opentelemetry
+  kubernetes.core.helm:
+    name: otel-collector
+    chart_ref: open-telemetry/opentelemetry-collector
+    release_namespace: opentelemetry
+    create_namespace: true
+    values:
+      mode: daemonset
+      image:
+        repository: otel/opentelemetry-collector-k8s
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+      presets:
+        logsCollection:
+          enabled: true
+        kubernetesAttributes:
+          enabled: true
+        kubeletMetrics:
+          enabled: true
+        hostMetrics:
+          enabled: true
+      config:
+        exporters:
+          otlp/quickwit:
+            endpoint: quickwit-indexer.quickwit.svc.cluster.local:7281
+            tls:
+              insecure: true
+            headers:
+              qw-otel-logs-index: otel-logs-v0_7
+          otlphttp/prometheus:
+            endpoint: http://prometheus-server.prometheus.svc.cluster.local:80/api/v1/otlp
+            tls:
+              insecure: true
+          debug:
+            verbosity: detailed
+        receivers:
+          kubeletstats:
+            collection_interval: 10s
+            auth_type: "serviceAccount"
+            insecure_skip_verify: true
+        processors:
+          attributes/node:
+            actions:
+              - key: node
+                value: ${env:K8S_NODE_NAME}
+                action: upsert
+        service:
+          pipelines:
+            logs:
+              exporters:
+                - otlp/quickwit
+            metrics:
+              processors:
+                - attributes/node
+              exporters:
+                - otlphttp/prometheus

@@ -1,0 +1,29 @@
+- name: Add grafana chart repository
+  kubernetes.core.helm_repository:
+    name: grafana
+    repo_url: https://grafana.github.io/helm-charts
+
+- name: Install grafana
+  kubernetes.core.helm:
+    name: grafana
+    chart_ref: grafana/grafana
+    release_namespace: grafana
+    create_namespace: true
+    values:
+      plugins:
+        - https://github.com/quickwit-oss/quickwit-datasource/releases/download/v0.4.6/quickwit-quickwit-datasource-0.4.6.zip;quickwit-quickwit-datasource
+      adminUser: "{{grafana_username}}"
+      adminPassword: "{{grafana_password}}"
+      persistence:
+        type: pvc
+        enabled: true
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: quickwit
+              type: quickwit-quickwit-datasource
+              url: http://quickwit-indexer.quickwit.svc.cluster.local:7280/api/v1
+              jsonData:
+                index: otel-logs-v0_7
+                logMessageField: body.message

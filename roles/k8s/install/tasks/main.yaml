@@ -1,0 +1,137 @@
+- name: Validate variable kubernetes version
+  assert:
+    that: k8s_version is string
+
+- name: Install the required packages
+  apt:
+    name: "{{packages}}"
+    state: present
+    update_cache: true
+  vars:
+    packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gpg
+      - lsof
+      - psmisc
+      - conntrack
+      - ethtool
+      - iptables
+      - socat
+      - software-properties-common
+      - iputils-ping
+      - net-tools
+      - linux-tools-{{ansible_kernel}}
+      - python3
+      - python3-kubernetes
+
+- name: Add br_netfilter module
+  lineinfile:
+    path: /etc/modules-load.d/k8s.conf
+    line: br_netfilter
+    create: true
+    mode: "0644"
+
+- name: Load br_netfilter module
+  community.general.modprobe:
+    name: br_netfilter
+    state: present
+
+- name: Enable bridge-nf-call tables
+  ansible.posix.sysctl:
+    sysctl_file: /etc/sysctl.d/k8s.conf
+    sysctl_set: true
+    reload: true
+    state: present
+    name: "{{item.name}}"
+    value: "{{item.value}}"
+  with_items:
+    - {name: net.bridge.bridge-nf-call-iptables, value: 1}
+    - {name: net.bridge.bridge-nf-call-ip6tables, value: 1}
+    - {name: net.ipv4.ip_forward, value: 1}
+    - {name: fs.inotify.max_user_watches, value: 1048576}
+    - {name: fs.inotify.max_user_instances, value: 8192}
+
+- name: Check /etc/cloud exists
+  stat:
+    path: /etc/cloud
+  register: cloud_directory
+
+- name: Disable cloud-init
+  copy:
+    dest: "/etc/cloud/cloud-init.disabled"
+    content: ""
+    mode: "0644"
+  when: cloud_directory.stat.exists
+
+- name: Disable apparmor service
+  systemd:
+    name: apparmor
+    enabled: false
+    masked: true
+
+- name: Disable systemd-networkd-wait-online service
+  systemd:
+    name: systemd-networkd-wait-online
+    enabled: false
+    masked: true
+
+- name: Disable broadcast messages from systemd-journald
+  lineinfile:
+    path: /etc/systemd/journald.conf
+    line: ForwardToWall=no
+    regexp: ^.*ForwardToWall=.*$
+
+- name: Reload systemd-journald
+  systemd:
+    name: systemd-journald
+    state: restarted
+
+- name: Create /etc/apt/keyrings
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Create k8s short version
+  set_fact:
+    k8s_version_short: v{{".".join(k8s_version.split(".")[0:2])}}
+
+- name: Download the public signing key for the Kubernetes package repositories
+  apt_key:
+    url: https://pkgs.k8s.io/core:/stable:/{{k8s_version_short}}/deb/Release.key
+    keyring: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    state: present
+
+- name: Add the appropriate Kubernetes apt repository
+  apt_repository:
+    repo: deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{k8s_version_short}}/deb/ /
+    state: present
+    filename: kubernetes
+
+- name: Update the apt package index, install kubelet, kubeadm and kubectl, and pin their version
+  apt:
+    name: "{{packages}}"
+    state: present
+    update_cache: true
+    allow_change_held_packages: true
+  vars:
+    packages:
+      - kubelet={{k8s_version}}
+      - kubeadm={{k8s_version}}
+      - kubectl={{k8s_version}}
+
+- name: Hold package update
+  command: "apt-mark hold kubelet kubeadm kubectl"
+  changed_when: true
+
+- name: Reload kubelet service
+  systemd:
+    daemon_reload: true
+
+- name: Start kubelet service
+  service:
+    name: kubelet
+    state: started
+    enabled: true

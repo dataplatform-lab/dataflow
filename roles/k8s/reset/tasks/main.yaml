@@ -1,0 +1,8 @@
+- name: Reset the Kubernetes cluster using kubeadm
+  command: kubeadm reset -f --cri-socket {{cri_socket}}
+  register: kubeadm_output
+  changed_when: true
+
+- name: Show kubeadm output
+  debug:
+    var: kubeadm_output.stdout_lines

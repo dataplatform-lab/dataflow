@@ -1,0 +1,29 @@
+- name: Setup k8s
+  hosts: master:slave:worker
+  become: true
+  roles:
+    - k8s/setup
+
+- name: Setup k8s master
+  hosts: master
+  become: true
+  roles:
+    - k8s/master
+
+- name: Setup k8s slave
+  hosts: slave
+  become: true
+  roles:
+    - k8s/slave
+
+- name: Setup k8s worker
+  hosts: worker
+  become: true
+  roles:
+    - k8s/worker
+
+- name: Reboot
+  hosts: master:slave:worker
+  become: true
+  roles:
+    - reboot

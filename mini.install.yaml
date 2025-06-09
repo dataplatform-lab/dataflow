@@ -1,0 +1,45 @@
+- name: Install local-path-provisioner
+  hosts: localhost
+  roles:
+    - localpath
+
+- name: Install gateway api
+  hosts: localhost
+  roles:
+    - gateway
+
+- name: Install certmanager
+  hosts: localhost
+  roles:
+    - certmanager/install
+
+- name: Install self-signed cluster issuer
+  hosts: localhost
+  roles:
+    - certmanager/selfsigned
+
+- name: Install minio
+  hosts: localhost
+  roles:
+    - minio
+
+- name: Install quickwit
+  hosts: localhost
+  roles:
+    - quickwit/prepare
+    - quickwit/install
+
+- name: Install opentelemetry
+  hosts: localhost
+  roles:
+    - opentelemetry/install
+
+- name: Install prometheus
+  hosts: localhost
+  roles:
+    - prometheus/install
+
+- name: Install grafana
+  hosts: localhost
+  roles:
+    - grafana/install

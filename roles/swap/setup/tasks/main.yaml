@@ -1,0 +1,52 @@
+- name: Check variables are defined
+  assert:
+    that:
+      - linux_swap_size is string
+      - linux_swap_path is string
+
+- name: Validate variable swap size config
+  assert:
+    that:
+      - linux_swap_size is match ('^\d+(\.\d+)?([K|M|G|T|P|E|Z|Y])|(B|iB)$')
+  when: linux_swap_size is defined
+
+- name: Remove swapfile from /etc/fstab
+  ansible.posix.mount:
+    name: "{{item}}"
+    fstype: swap
+    state: absent
+  with_items:
+    - swap
+    - none
+
+- name: Swap off
+  command: swapoff -a
+  changed_when: true
+
+- name: Recreate swap file
+  shell: "rm -f {{linux_swap_path}} && sudo fallocate -l {{linux_swap_size}} {{linux_swap_path}}"
+  changed_when: true
+
+- name: Change swap file permission
+  file:
+    path: "{{linux_swap_path}}"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Setup swap area
+  command: "mkswap {{linux_swap_path}}"
+  changed_when: true
+
+- name: Create swap on /etc/fstab
+  ansible.posix.mount:
+    name: swap
+    fstype: swap
+    state: present
+    src: "{{linux_swap_path}}"
+    opts: sw,pri=0
+    dump: 0
+
+- name: Swap on
+  command: "swapon {{linux_swap_path}}"
+  changed_when: true

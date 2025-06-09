@@ -1,0 +1,23 @@
+- name: Set hostname
+  hostname:
+    name: "{{inventory_hostname}}"
+
+- name: Add hostname
+  lineinfile:
+    path: /etc/hosts
+    regexp: "^{{ansible_host}}"
+    line: "{{ansible_host}} {{inventory_hostname}}.cluster.local {{inventory_hostname}}"
+    create: true
+    mode: "0644"
+
+- name: Copy the limits configuration to server location
+  copy:
+    src: "{{linux_limits_config}}"
+    dest: /etc/security/limits.d/
+    mode: "0644"
+  when: linux_limits_config is defined
+
+- name: Setup swap
+  include_role:
+    name: swap/setup
+  when: linux_swap_size is defined

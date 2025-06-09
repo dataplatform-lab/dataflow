@@ -1,0 +1,21 @@
+- name: Add emqx chart repository
+  kubernetes.core.helm_repository:
+    name: emqx
+    repo_url: https://repos.emqx.io/charts
+
+- name: Install emqx operator
+  kubernetes.core.helm:
+    name: emqx
+    chart_ref: emqx/emqx-operator
+    release_namespace: emqx
+    create_namespace: true
+
+- name: Wait emqx operator pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    label_selectors:
+      - control-plane=controller-manager
+    namespace: emqx
+    wait: true
+    wait_condition:
+      type: Ready

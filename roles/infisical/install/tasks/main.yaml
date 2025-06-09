@@ -1,0 +1,63 @@
+- name: Add infisical chart repository
+  kubernetes.core.helm_repository:
+    name: infisical
+    repo_url: https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts
+
+- name: Install infisical
+  kubernetes.core.helm:
+    name: infisical
+    chart_ref: infisical/infisical-standalone
+    release_namespace: infisical
+    create_namespace: true
+    values:
+      nameOverride: infisical
+      fullnameOverride: infisical
+      infisical:
+        enabled: true
+        name: k8s
+        autoDatabaseSchemaMigration: true
+        fullnameOverride: ""
+        podAnnotations: {}
+        deploymentAnnotations: {}
+        replicaCount: 2
+        image:
+          repository: infisical/infisical
+          tag: "{{infisical_image_tag}}"
+          pullPolicy: IfNotPresent
+        affinity: {}
+        kubeSecretRef: infisical-secrets
+        service:
+          annotations: {}
+          type: ClusterIP
+          nodePort: ""
+        resources:
+          limits:
+            memory: 500Mi
+          requests:
+            cpu: 400m
+      ingress:
+        enabled: true
+        hostName: ""
+        ingressClassName: nginx
+        nginx:
+          enabled: true
+        annotations: {}
+        tls: []
+      postgresql:
+        enabled: true
+        name: postgresql
+        fullnameOverride: postgresql
+        auth:
+          username: infiuser
+          password: infipass
+          database: infisical
+      redis:
+        enabled: true
+        name: redis
+        fullnameOverride: redis
+        cluster:
+          enabled: false
+        usePassword: true
+        auth:
+          password: infipass
+        architecture: standalone

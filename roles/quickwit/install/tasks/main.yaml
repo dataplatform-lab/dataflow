@@ -1,0 +1,24 @@
+- name: Add quickwit chart repository
+  kubernetes.core.helm_repository:
+    name: quickwit
+    repo_url: https://helm.quickwit.io
+
+- name: Install quickwit
+  kubernetes.core.helm:
+    name: quickwit
+    chart_ref: quickwit/quickwit
+    release_namespace: quickwit
+    create_namespace: true
+    values:
+      config:
+        storage:
+          s3:
+            flavor: "{{s3_flavor}}"
+            region: "{{s3_region}}"
+            endpoint: "{{s3_endpoint}}"
+            access_key_id: "{{s3_accesskey}}"
+            secret_access_key: "{{s3_secretkey}}"
+        metastore_uri: "{{quickwit_index_uri}}"
+        default_index_root_uri: "{{quickwit_index_uri}}"
+        indexer:
+          enable_otlp_endpoint: true

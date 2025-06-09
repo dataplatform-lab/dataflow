@@ -1,0 +1,19 @@
+- name: Add nvidia-device-plugin chart repository
+  kubernetes.core.helm_repository:
+    name: nvidia-device-plugin
+    repo_url: https://nvidia.github.io/k8s-device-plugin
+
+- name: Install nvidia-device-plugin
+  kubernetes.core.helm:
+    name: nvidia-device-plugin
+    chart_ref: nvidia-device-plugin/nvidia-device-plugin
+    release_namespace: nvidia
+    create_namespace: true
+    values:
+      migStrategy: "none"
+      failOnInitError: "true"
+      nvidiaDriverRoot: "/"
+      deviceDiscoveryStrategy: "tegra"
+      deviceListStrategy: "envvar"
+      deviceIDStrategy: "uuid"
+      allowDefaultNamespace: true

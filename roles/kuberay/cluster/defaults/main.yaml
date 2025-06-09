@@ -1,0 +1,15 @@
+ray_version: 2.41.0
+ray_headgroup_limits_cpu: 4
+ray_headgroup_limits_memory: 4G
+ray_headgroup_requests_cpu: 1
+ray_headgroup_requests_memory: 4G
+ray_workergroup_limits_cpu: 4
+ray_workergroup_limits_memory: 4G
+ray_workergroup_requests_cpu: 1
+ray_workergroup_requests_memory: 4G
+ray_workergroup_name: k8s
+ray_workergroup_replicas: 2
+ray_workergroup_min_replicas: 2
+ray_workergroup_max_replicas: 8
+ray_workergroup_limits_gpu: 1
+ray_workergroup_requests_gpu: 1

@@ -1,0 +1,5 @@
+- name: Copy the kubeconfig file to local
+  fetch:
+    src: /etc/kubernetes/admin.conf
+    dest: "{{kubeconfig_file}}"
+    flat: true

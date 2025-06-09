@@ -1,0 +1,8 @@
+- name: Install helm
+  unarchive:
+    src: https://get.helm.sh/helm-{{helm_version}}-linux-amd64.tar.gz
+    dest: /usr/local/bin
+    mode: 0755
+    remote_src: true
+    extra_opts:
+      - --strip-components=1

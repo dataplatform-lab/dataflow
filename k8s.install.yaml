@@ -1,0 +1,6 @@
+- name: Install k8s
+  hosts: master:slave:worker
+  become: true
+  roles:
+    - crio/install
+    - k8s/install

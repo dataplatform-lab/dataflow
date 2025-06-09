@@ -1,0 +1,5 @@
+- name: Reset k8s
+  hosts: master:slave:worker
+  become: true
+  roles:
+    - k8s/reset

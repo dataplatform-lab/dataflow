@@ -1,0 +1,10 @@
+- name: Add labels to gpu nodes
+  kubernetes.core.k8s:
+    state: patched
+    kind: Node
+    name: "{{item}}"
+    definition:
+      metadata:
+        labels:
+          nvidia.com/gpu.present: "true"
+  with_items: "{{groups['gpu']}}"

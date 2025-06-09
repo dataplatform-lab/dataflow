@@ -1,0 +1,83 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+bootstrapTokens:
+  - groups:
+      - system:bootstrappers:kubeadm:default-node-token
+    token: abc123.abcdefgh12345678
+    ttl: 24h0m0s
+    usages:
+      - signing
+      - authentication
+nodeRegistration:
+  criSocket: unix:///var/run/crio/crio.sock
+  taints: []
+certificateKey: 786f78a6da78f6fad786fed9817321abffadabeedfff89faed89fde12cd13289
+localAPIEndpoint:
+  advertiseAddress: {{ansible_host}}
+  bindPort: 6443
+skipPhases:
+  - addon/kube-proxy
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+apiServer:
+{% if k8s_apiserver_cert_extra_sans is defined %}
+  certSANs:
+{%   for item in k8s_apiserver_cert_extra_sans if k8s_apiserver_cert_extra_sans is defined %}
+    - {{item}}
+{%   endfor %}
+{% endif %}
+  extraArgs:
+{% if k8s_oidc_issuer_url is defined %}
+    oidc-issuer-url: {{k8s_oidc_issuer_url}}
+    oidc-client-id: {{k8s_cluster_name}}
+    oidc-username-claim: email
+    oidc-groups-claim: roles
+{% endif %}
+    logging-format: json
+  timeoutForControlPlane: 4m0s
+certificatesDir: /etc/kubernetes/pki
+clusterName: {{k8s_cluster_name}}
+controllerManager:
+  extraArgs:
+    bind-address: '0.0.0.0'
+    logging-format: json
+    node-cidr-mask-size-ipv4: '{{k8s_node_cidr_mask_size_ipv4 if k8s_node_cidr_mask_size_ipv4 is defined else "22"}}'
+dns: {}
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+    extraArgs:
+      listen-metrics-urls: http://0.0.0.0:2381
+imageRepository: registry.k8s.io
+kubernetesVersion: {{k8s_cluster_version}}
+{% if k8s_apiserver_endpoint is defined %}
+controlPlaneEndpoint: {{k8s_apiserver_endpoint}}
+{% else %}
+controlPlaneEndpoint: {{ansible_host}}:6443
+{% endif %}
+networking:
+  dnsDomain: cluster.local
+  serviceSubnet: {{k8s_service_subnet}}
+  podSubnet: {{k8s_pod_subnet}}
+scheduler:
+  extraArgs:
+    bind-address: '0.0.0.0'
+    logging-format: json
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+maxPods: {{k8s_max_pods if k8s_max_pods is defined else 1024}}
+{% if k8s_swap_behavior is defined %}
+failSwapOn: false
+featureGates:
+  NodeSwap: true
+memorySwap:
+  swapBehavior: {{k8s_swap_behavior}}
+{% endif %}
+{% if k8s_allowed_unsafe_sysctls is defined %}
+allowedUnsafeSysctls:
+{% for item in k8s_allowed_unsafe_sysctls %}
+  - {{item}}
+{%   endfor %}
+{% endif %}

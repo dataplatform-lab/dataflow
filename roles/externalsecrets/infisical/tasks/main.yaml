@@ -1,0 +1,9 @@
+- name: Install infisical secrets
+  kubernetes.core.k8s:
+    state: present
+    template: secret.yaml.j2
+
+- name: Install infisical secret store
+  kubernetes.core.k8s:
+    state: present
+    template: secretstore.yaml.j2

@@ -1,0 +1,29 @@
+- name: Validate variable nvidia
+  assert:
+    that:
+      - nvidia_version is string
+
+- name: Download the public signing key for the nvidia package repositories
+  apt_key:
+    url: "https://nvidia.github.io/libnvidia-container/gpgkey"
+    keyring: /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+    state: present
+
+- name: Add the appropriate nvidia apt repository
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/deb/amd64 /"
+    state: present
+    filename: nvidia-container-toolkit
+
+- name: Install nvidia packages
+  apt:
+    name: "{{item}}"
+    state: present
+    update_cache: true
+  with_items:
+    - nvidia-driver-{{nvidia_version}}
+    - nvidia-container-toolkit
+
+- name: Hold package update
+  command: apt-mark hold nvidia-container-toolkit
+  changed_when: true

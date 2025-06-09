@@ -1,0 +1,6 @@
+quickwit_index_uri: s3://quickwit/indexes
+s3_flavor: minio
+s3_region: default
+s3_endpoint: http://minio.minio.svc.cluster.local:9000
+s3_accesskey: minio
+s3_secretkey: minio123

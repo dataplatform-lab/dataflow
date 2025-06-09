@@ -1,0 +1,4 @@
+- name: Install emqx
+  kubernetes.core.k8s:
+    state: present
+    template: emqx.yaml.j2

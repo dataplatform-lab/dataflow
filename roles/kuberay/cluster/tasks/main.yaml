@@ -1,0 +1,4 @@
+- name: Install kuberay cluster
+  kubernetes.core.k8s:
+    state: present
+    template: cluster.yaml.j2

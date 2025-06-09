@@ -1,0 +1,12 @@
+- name: Install self-signed cluster issuer
+  kubernetes.core.k8s:
+    state: present
+    template: selfsigned.yaml.j2
+
+- name: Wait self-signed cluster issuer
+  kubernetes.core.k8s_info:
+    kind: ClusterIssuer
+    name: selfsigned
+    wait: true
+    wait_condition:
+      type: Ready

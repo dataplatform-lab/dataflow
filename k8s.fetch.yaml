@@ -1,0 +1,5 @@
+- name: Fetch kubeconfig
+  hosts: master
+  become: true
+  roles:
+    - k8s/fetch
