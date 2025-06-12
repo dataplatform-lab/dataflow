@@ -1,10 +1,12 @@
 - name: Download gateway api manifest
   get_url:
-    url: https://github.com/kubernetes-sigs/gateway-api/releases/download/{{gateway_api_version}}/standard-install.yaml
+    url: https://github.com/kubernetes-sigs/gateway-api/releases/download/{{ gateway_api_version }}/standard-install.yaml
     dest: /tmp/gateway-api.yaml
     mode: "0664"
+    force: true
 
 - name: Install gateway api
   kubernetes.core.k8s:
     state: present
+    apply: true
     src: /tmp/gateway-api.yaml
