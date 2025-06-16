@@ -1,2 +1,5 @@
-minio_username: minio
-minio_password: minio123
+minio_version: 17.0.4
+minio_root_user: minio
+minio_root_password: minio123
+minio_replica_count: 1
+minio_drives_per_node: 4

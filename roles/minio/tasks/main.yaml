@@ -1,13 +1,111 @@
+- name: Add risingwave chart repository
+  kubernetes.core.helm_repository:
+    name: bitnami
+    repo_url: https://charts.bitnami.com/bitnami
+    force_update: true
+
 - name: Install minio
-  kubernetes.core.k8s:
-    state: present
-    template: minio.yaml.j2
+  kubernetes.core.helm:
+    name: minio
+    chart_ref: bitnami/minio
+    chart_version: "{{ minio_version }}"
+    release_namespace: minio
+    create_namespace: true
+    values:
+      image:
+        registry: docker.io
+        repository: bitnami/minio
+        tag: 2025.5.24-debian-12-r5
+        pullPolicy: IfNotPresent
+        pullSecrets: []
+        debug: false
+
+      clientImage:
+        registry: docker.io
+        repository: bitnami/minio-client
+        tag: 2025.5.21-debian-12-r2
+
+      auth:
+        rootUser: "{{ minio_root_user }}"
+        rootPassword: "{{ minio_root_password }}"
+        existingSecret: ""
+        usePasswordFiles: false
+        useSecret: true
+
+      tls:
+        enabled: false
+
+      mode: distributed
+
+      updateStrategy:
+        type: RollingUpdate
+
+      statefulset:
+        podManagementPolicy: Parallel
+        replicaCount: "{{ minio_replica_count }}"
+        zones: 1
+        drivesPerNode: "{{ minio_drives_per_node }}"
+
+      containerPorts:
+        api: 9000
+
+      podAntiAffinityPreset: soft
+
+      resourcesPreset: "micro"
+
+      pdb:
+        create: true
+
+      service:
+        type: LoadBalancer
+        ports:
+          api: 9000
+
+      networkPolicy:
+        enabled: true
+        allowExternal: true
+        allowExternalEgress: true
+        addExternalClientAccess: true#
+
+      persistence:
+        enabled: true
+        accessModes:
+          - ReadWriteOnce
+        size: 1Gi
+
+      metrics:
+        enabled: false
+
+      console:
+        enabled: true
+        image:
+          registry: docker.io
+          repository: bitnami/minio-object-browser
+          tag: 2.0.1-debian-12-r1
+          pullPolicy: IfNotPresent
+          pullSecrets: []
+        replicaCount: 1
+        containerPorts:
+          http: 9090
+
+        service:
+          type: LoadBalancer
+          ports:
+            http: 9090
+
+      provisioning:
+        enabled: true
+        buckets:
+          - name: risingwave
+            region: ap-northeast-2
+            versioning: Suspended
 
 - name: Wait minio pod
   kubernetes.core.k8s_info:
     kind: Pod
     label_selectors:
-      - app=minio
+      - app.kubernetes.io/name=minio
+      - app.kubernetes.io/component=minio
     namespace: minio
     wait: true
     wait_condition:
@@ -16,5 +114,5 @@
 
 - name: Check if minio pod is running
   fail:
-    msg: "Minio installation failed. Expected 1 pod, found {{ result.resources | length }}."
-  when: result.resources | length != 1
+    msg: "Minio installation failed. Expected {{ minio_replica_count }} pod, found {{ result.resources | length }}."
+  when: result.resources | length != minio_replica_count
