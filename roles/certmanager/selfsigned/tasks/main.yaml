@@ -10,3 +10,9 @@
     wait: true
     wait_condition:
       type: Ready
+  register: result
+
+- name: Check if self-signed cluster issuer is ready
+  fail:
+    msg: "Self-signed cluster issuer installation failed. Expected 1 resource, found {{ result.resources | length }}."
+  when: result.resources | length != 1

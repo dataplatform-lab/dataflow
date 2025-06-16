@@ -20,3 +20,9 @@
     wait: true
     wait_condition:
       type: Ready
+  register: result
+
+- name: Check if emqx operator pod is running
+  fail:
+    msg: "EMQX operator installation failed. Expected 1 pod, found {{ result.resources | length }}."
+  when: result.resources | length != 1

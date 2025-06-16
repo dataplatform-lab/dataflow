@@ -8,7 +8,7 @@
   kubernetes.core.helm:
     name: cert-manager
     chart_ref: cert-manager/cert-manager
-    chart_version: "{{certmanager_version}}"
+    chart_version: "{{ certmanager_version }}"
     release_namespace: cert-manager
     create_namespace: true
     values:
@@ -29,28 +29,14 @@
   kubernetes.core.k8s_info:
     kind: Pod
     label_selectors:
-      - app=cert-manager
+      - app.kubernetes.io/name in (cert-manager, cainjector, webhook)
     namespace: cert-manager
     wait: true
     wait_condition:
       type: Ready
+  register: result
 
-- name: Wait cainjector pod
-  kubernetes.core.k8s_info:
-    kind: Pod
-    label_selectors:
-      - app=cainjector
-    namespace: cert-manager
-    wait: true
-    wait_condition:
-      type: Ready
-
-- name: Wait webhook pod
-  kubernetes.core.k8s_info:
-    kind: Pod
-    label_selectors:
-      - app.kubernetes.io/name=webhook
-    namespace: cert-manager
-    wait: true
-    wait_condition:
-      type: Ready
+- name: Check if cert-manager pods are running
+  fail:
+    msg: "Cert-manager installation failed. Expected 3 pods, found {{ result.resources | length }}."
+  when: result.resources | length != 3

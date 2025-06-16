@@ -84,7 +84,10 @@
       type: Ready
   register: result
 
-- name: Check postgresql-ha installation
+- name: Check if postgresql-ha pods are running
   fail:
-    msg: "PostgreSQL HA installation failed. No pods found."
-  when: result.resources | length != 5
+    msg: |-
+      PostgreSQL-HA installation failed.
+      "Expected {{ postgresql_replica_count + postgresql_pgpool_replica_count + 1 }} pods"
+      ", found {{ result.resources | length }}."
+  when: result.resources | length != (postgresql_replica_count + postgresql_pgpool_replica_count + 1)

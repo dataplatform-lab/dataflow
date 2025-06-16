@@ -45,3 +45,9 @@
     wait: true
     wait_condition:
       type: Ready
+  register: result
+
+- name: Check if cilium pod is running
+  fail:
+    msg: "Cilium installation failed. Expected 1 pod, found {{ result.resources | length }}."
+  when: result.resources | length != 1
