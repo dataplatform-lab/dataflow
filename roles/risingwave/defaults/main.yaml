@@ -1,0 +1,10 @@
+risingwave_version: 0.2.28
+risingwave_requests_cpu: 100m
+risingwave_requests_memory: 250Mi
+risingwave_limits_memory: 1Gi
+risingwave_postgresql_username: postgres
+risingwave_postgresql_password: postgres123
+risingwave_s3_access_key: minio
+risingwave_s3_secret_key: minio123
+risingwave_root_username: admin
+risingwave_root_password: admin123

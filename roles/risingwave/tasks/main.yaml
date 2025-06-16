@@ -1,0 +1,241 @@
+- name: Add risingwave chart repository
+  kubernetes.core.helm_repository:
+    name: risingwavelabs
+    repo_url: https://risingwavelabs.github.io/helm-charts
+    force_update: true
+
+- name: Install risingwave
+  kubernetes.core.helm:
+    name: risingwave
+    chart_ref: risingwavelabs/risingwave
+    chart_version: "{{ risingwave_version }}"
+    release_namespace: risingwave
+    create_namespace: true
+    values:
+      tags:
+        bundle: false
+        etcd: false
+        postgresql: false
+        minio: false
+
+      image:
+        registry: docker.risingwave.com
+        repository: risingwavelabs/risingwave
+        tag: v2.4.1
+        pullPolicy: IfNotPresent
+        pullSecrets: []
+
+      serviceAccount:
+        create: true
+
+      service:
+        type: LoadBalancer
+        port: 4567
+        nodePort: 31567
+
+      tls:
+        existingSecretName: ""
+
+      standalone:
+        enabled: false
+        replicas: 2
+        resources:
+          requests:
+            cpu: "{{ risingwave_requests_cpu }}"
+            memory: "{{ risingwave_requests_memory }}"
+          limits:
+            memory: "{{ risingwave_limits_memory }}"
+
+        terminationGracePeriodSeconds: 1
+        rustLog: INFO
+        rustBacktrace: full
+
+      metaStore:
+        postgresql:
+          enabled: true
+          host: postgresql-ha-pgpool.postgresql-ha.svc.cluster.local
+          port: 5432
+          database: risingwave
+          authentication:
+            username: "{{ risingwave_postgresql_username }}"
+            password: "{{ risingwave_postgresql_password }}"
+
+      stateStore:
+        dataDirectory: hummock
+        s3:
+          enabled: true
+          endpoint: http://minio.minio.svc.cluster.local:9000
+          region: ap-northeast-2
+          bucket: risingwave
+          forcePathStyle: true
+          authentication:
+            useServiceAccount: false
+            accessKey: "{{ risingwave_s3_access_key }}"
+            secretAccessKey: "{{ risingwave_s3_secret_key }}"
+            # existingSecretName: ""
+
+        minio:
+          enabled: false
+          endpoint: ""
+          bucket: ""
+          authentication:
+            username: ""
+            password: ""
+            existingSecretName: ""
+
+      configuration: ""
+      existingConfigMap: ""
+      compactMode:
+        enabled: false
+
+      metaComponent:
+        replicas: 1
+        resources:
+          limits: {}
+          requests: {}
+        terminationGracePeriodSeconds: 1
+        rustLog: INFO
+        rustBacktrace: full
+        advertisingWithIP: false
+        waitForMetaStore: true
+        configuration: ""
+
+      frontendComponent:
+        replicas: 1
+        resources:
+          limits: {}
+          requests: {}
+        terminationGracePeriodSeconds: 10
+        rustLog: INFO
+        rustBacktrace: full
+        embeddedServing: false
+        advertisingWithIP: false
+        configuration: ""
+
+      computeComponent:
+        replicas: 1
+        autoscaling:
+          enabled: false
+          maxReplicas: 5
+          metrics: null
+          behavior: null
+        resources:
+          limits: {}
+          requests: {}
+        terminationGracePeriodSeconds: 1
+        rustLog: INFO
+        rustBacktrace: full
+        persistentVolumeClaimRetentionPolicy:
+        autoDeregistration:
+          enabled: false
+        advertisingWithIP: false
+        configuration: ""
+
+      compactorComponent:
+        replicas: 1
+        resources:
+          limits: {}
+          requests: {}
+        terminationGracePeriodSeconds: 1
+        rustLog: INFO
+        rustBacktrace: full
+        configuration: ""
+
+      ports:
+        meta:
+          svc: 5690
+          dashboard: 5691
+          metrics: 1250
+        compute:
+          svc: 5688
+          metrics: 1222
+        frontend:
+          svc: 4567
+          metrics: 8080
+        compactor:
+          svc: 6660
+          metrics: 1260
+
+      monitor:
+        annotations:
+          enabled: false
+
+        podMonitor:
+          enabled: false
+          namespace: ""
+          interval: 5s
+          scrapeTimeout: 5s
+          scheme: http
+
+      auth:
+        rootUser: root
+        rootPassword: root123
+
+      databases: []
+      wait: true
+
+      postgresqlClient:
+        image: postgres:17
+
+      busybox:
+        image: busybox:1.36
+
+      bash:
+        image: bash:5.2
+
+- name: Wait risingwave compute pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    label_selectors:
+      - risingwave/component=compute
+    namespace: risingwave
+    wait: true
+    wait_condition:
+      type: Ready
+  register: result_compute
+
+- name: Wait risingwave meta pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    label_selectors:
+      - risingwave/component=meta
+    namespace: risingwave
+    wait: true
+    wait_condition:
+      type: Ready
+  register: result_meta
+
+- name: Wait risingwave frontend pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    label_selectors:
+      - risingwave/component=frontend
+    namespace: risingwave
+    wait: true
+    wait_condition:
+      type: Ready
+  register: result_frontend
+
+- name: Wait risingwave compactor pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    label_selectors:
+      - risingwave/component=compactor
+    namespace: risingwave
+    wait: true
+    wait_condition:
+      type: Ready
+  register: result_compactor
+
+- name: Check if risingwave pods are running
+  fail:
+    msg: |-
+      RisingWave installation failed. Expected 1 pod for each component, found:
+      - Compute: {{ result_compute.resources | length }}
+      - Meta: {{ result_meta.resources | length }}
+      - Frontend: {{ result_frontend.resources | length }}
+      - Compactor: {{ result_compactor.resources | length }}
+  when: result_compute.resources | length != 1 or
+        result_meta.resources | length != 1 or
+        result_frontend.resources | length != 1 or
+        result_compactor.resources | length != 1
