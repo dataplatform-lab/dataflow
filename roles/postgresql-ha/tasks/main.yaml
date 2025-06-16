@@ -1,0 +1,90 @@
+- name: Add postgresql-ha chart repository
+  kubernetes.core.helm_repository:
+    name: bitnami
+    repo_url: https://charts.bitnami.com/bitnami
+    force_update: true
+
+- name: Install postgresql-ha
+  kubernetes.core.helm:
+    name: postgresql-ha
+    chart_ref: bitnami/postgresql-ha
+    chart_version: "{{ postgresql_version }}"
+    release_namespace: postgresql-ha
+    create_namespace: true
+    values:
+      postgresql:
+        replicaCount: "{{ postgresql_replica_count }}"
+        resources:
+          requests:
+            cpu: "{{ postgresql_requests_cpu }}"
+            memory: "{{ postgresql_requests_memory }}"
+          limits:
+            memory: "{{ postgresql_limits_memory }}"
+        username: postgres
+        password: postgres
+        repmgrUsername: repmgr
+        repmgrPassword: repmgr
+        # existingSecret: postgresql-secret
+        containerPorts:
+          postgresql: 5432
+        pdb:
+          create: true
+          minAvailable: 1
+        maxConnections: "{{ postgresql_max_connections }}"
+        readinessProbe:
+          enabled: false
+        headlessWithNotReadyAddresses: true
+        usePasswordFiles: false
+      witness:
+        create: true
+        usePasswordFiles: false
+      pgpool:
+        replicaCount: "{{ postgresql_pgpool_replica_count }}"
+        resources:
+          requests:
+            cpu: "{{ postgresql_pgpool_requests_cpu }}"
+            memory: "{{ postgresql_pgpool_requests_memory }}"
+          limits:
+            memory: "{{ postgresql_pgpool_limits_memory }}"
+        # existingSecret: pgpool-secret
+        adminUsername: admin
+        adminPassword: admin
+        containerPorts:
+          postgresql: 5432
+        pdb:
+          create: true
+          minAvailable: 1
+        podLabels:
+          app: pgpool
+        maxPool: 1
+        numInitChildren: "{{ postgresql_pgpool_num_init_children }}"
+        reservedConnections: 1
+        childMaxConnections: "{{ postgresql_pgpool_child_max_connections }}"
+        childLifeTime: 30
+        extraEnvVars:
+          - name: PGPOOL_ENABLE_POOL_HBA
+            value: 'no'
+        usePasswordFiles: false
+      # metrics:
+      #   enabled: true
+      #   serviceMonitor:
+      #     enabled: true
+      persistence:
+        enabled: true
+        size: "{{ postgresql_pvc_size }}"
+
+- name: Wait postgresql-ha pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    label_selectors:
+      - app.kubernetes.io/name=postgresql-ha
+    namespace: postgresql-ha
+    wait: true
+    wait_condition:
+      type: Ready
+  register: result
+
+- name: Check postgresql-ha installation
+  fail:
+    msg: "PostgreSQL HA installation failed. No pods found."
+  when: result.resources | length != 5

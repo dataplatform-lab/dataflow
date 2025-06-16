@@ -1,0 +1,13 @@
+postgresql_version: 16.0.13
+postgresql_replica_count: 2
+postgresql_requests_cpu: 100m
+postgresql_requests_memory: 250Mi
+postgresql_limits_memory: 1Gi
+postgresql_max_connections: 128
+postgresql_pgpool_replica_count: 2
+postgresql_pgpool_requests_cpu: 100m
+postgresql_pgpool_requests_memory: 250Mi
+postgresql_pgpool_limits_memory: 1Gi
+postgresql_pgpool_num_init_children: 64
+postgresql_pgpool_child_max_connections: 128
+postgresql_pvc_size: 1Gi
