@@ -2,6 +2,7 @@
   kubernetes.core.helm_repository:
     name: kuberay
     repo_url: https://ray-project.github.io/kuberay-helm/
+    force_update: true
 
 - name: Install kuberay operator
   kubernetes.core.helm:

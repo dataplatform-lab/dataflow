@@ -2,6 +2,7 @@
   kubernetes.core.helm_repository:
     name: quickwit
     repo_url: https://helm.quickwit.io
+    force_update: true
 
 - name: Install quickwit
   kubernetes.core.helm:

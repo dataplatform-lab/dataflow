@@ -2,6 +2,7 @@
   kubernetes.core.helm_repository:
     name: open-telemetry
     repo_url: https://open-telemetry.github.io/opentelemetry-helm-charts
+    force_update: true
 
 - name: Install opentelemetry
   kubernetes.core.helm:

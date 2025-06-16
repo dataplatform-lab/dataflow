@@ -2,6 +2,7 @@
   kubernetes.core.helm_repository:
     name: infisical
     repo_url: https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts
+    force_update: true
 
 - name: Install infisical
   kubernetes.core.helm:

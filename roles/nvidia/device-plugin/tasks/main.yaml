@@ -2,6 +2,7 @@
   kubernetes.core.helm_repository:
     name: nvidia-device-plugin
     repo_url: https://nvidia.github.io/k8s-device-plugin
+    force_update: true
 
 - name: Install nvidia-device-plugin
   kubernetes.core.helm:

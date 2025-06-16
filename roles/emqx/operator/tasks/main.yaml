@@ -2,6 +2,7 @@
   kubernetes.core.helm_repository:
     name: emqx
     repo_url: https://repos.emqx.io/charts
+    force_update: true
 
 - name: Install emqx operator
   kubernetes.core.helm:

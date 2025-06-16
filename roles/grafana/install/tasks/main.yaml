@@ -2,6 +2,7 @@
   kubernetes.core.helm_repository:
     name: grafana
     repo_url: https://grafana.github.io/helm-charts
+    force_update: true
 
 - name: Install grafana
   kubernetes.core.helm:
