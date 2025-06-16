@@ -11,3 +11,7 @@ postgresql_pgpool_limits_memory: 1Gi
 postgresql_pgpool_num_init_children: 64
 postgresql_pgpool_child_max_connections: 128
 postgresql_pvc_size: 1Gi
+postgresql_postgres_username: postgres
+postgresql_postgres_password: postgres123
+postgresql_pgpool_admin_username: admin
+postgresql_pgpool_admin_password: admin123

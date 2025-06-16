@@ -12,6 +12,14 @@
     release_namespace: postgresql-ha
     create_namespace: true
     values:
+      global:
+        postgresql:
+          usernmae: "{{ postgresql_postgres_username }}"
+          password: "{{ postgresql_postgres_password }}"
+        pgpool:
+          adminUsername: "{{ postgresql_pgpool_admin_username }}"
+          adminPassword: "{{ postgresql_pgpool_admin_password }}"
+        # existingSecret: postgresql-secret
       postgresql:
         replicaCount: "{{ postgresql_replica_count }}"
         resources:
@@ -20,11 +28,6 @@
             memory: "{{ postgresql_requests_memory }}"
           limits:
             memory: "{{ postgresql_limits_memory }}"
-        username: postgres
-        password: postgres
-        repmgrUsername: repmgr
-        repmgrPassword: repmgr
-        # existingSecret: postgresql-secret
         containerPorts:
           postgresql: 5432
         pdb:
@@ -46,16 +49,11 @@
             memory: "{{ postgresql_pgpool_requests_memory }}"
           limits:
             memory: "{{ postgresql_pgpool_limits_memory }}"
-        # existingSecret: pgpool-secret
-        adminUsername: admin
-        adminPassword: admin
         containerPorts:
           postgresql: 5432
         pdb:
           create: true
           minAvailable: 1
-        podLabels:
-          app: pgpool
         maxPool: 1
         numInitChildren: "{{ postgresql_pgpool_num_init_children }}"
         reservedConnections: 1
@@ -72,6 +70,10 @@
       persistence:
         enabled: true
         size: "{{ postgresql_pvc_size }}"
+      service:
+        type: LoadBalancer
+        ports:
+          postgresql: 5432
 
 - name: Wait postgresql-ha pod
   kubernetes.core.k8s_info:
