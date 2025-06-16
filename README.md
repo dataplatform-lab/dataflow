@@ -3,8 +3,9 @@
 ## Requirements
 
 - python3
+- helm
 - pip ansible, ansible-lint
-- kubernetes pip
+- pip kubernetes
 
 ## Start kubernetes using minikube
 
