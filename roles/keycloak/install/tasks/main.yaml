@@ -1,0 +1,33 @@
+- name: Add keycloak chart repository if not exists
+  kubernetes.core.helm_repository:
+    name: keycloak
+    repo_url: https://charts.bitnami.com/bitnami
+
+- name: Install keycloak
+  kubernetes.core.helm:
+    name: keycloak
+    chart_ref: keycloak/keycloak
+    chart_version: "{{ keycloak_version }}"
+    create_namespace: true
+    release_namespace: keycloak
+    values:
+      auth:
+        adminUser: "{{ keycloak_admin_username }}"
+        existingSecret: keycloak-secrets
+      production: true
+      proxy: edge
+      replicaCount: 2
+      resources:
+        requests:
+          cpu: 100m
+          memory: 500Mi
+        limits:
+          memory: 1Gi
+      service:
+        type: NodePort
+        nodePorts:
+          http: "{{ keycloak_service_nodeport_http }}"
+      metrics:
+        enabled: true
+      logging:
+        output: json

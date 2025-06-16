@@ -1,0 +1,3 @@
+keycloak_version: 24.7.4
+keycloak_admin_username: admin
+keycloak_service_nodeport_http: 31080

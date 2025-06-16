@@ -1,0 +1,5 @@
+- name: Install keycloak secrets
+  kubernetes.core.k8s:
+    state: present
+    template: secret.yaml.j2
+    namespace: keycloak
