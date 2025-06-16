@@ -38,9 +38,14 @@
           enabled: false
         headlessWithNotReadyAddresses: true
         usePasswordFiles: false
+        initdbScripts:
+          init.sql: |
+            CREATE DATABASE risingwave;
+
       witness:
         create: true
         usePasswordFiles: false
+
       pgpool:
         replicaCount: "{{ postgresql_pgpool_replica_count }}"
         resources:
@@ -67,9 +72,11 @@
       #   enabled: true
       #   serviceMonitor:
       #     enabled: true
+
       persistence:
         enabled: true
         size: "{{ postgresql_pvc_size }}"
+
       service:
         type: LoadBalancer
         ports:
