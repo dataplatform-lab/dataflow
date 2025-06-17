@@ -1,0 +1,59 @@
+rook_ceph_operator_version: "1.17.4"
+rook_ceph_cluster_version: "1.17.4"
+
+rook_ceph_namespace: "rook-ceph"
+rook_ceph_cluster_name: "rook-ceph"
+
+ceph_image: "quay.io/ceph/ceph:v19.2.1"
+
+mon_count: 1
+mon_allow_multiple_per_node: true
+
+mgr_count: 2
+mgr_allow_multiple_per_node: true
+
+dashboard_enabled: true
+dashboard_ssl: false
+dashboard_nodeport: 30070
+prometheus_endpoint: ""
+
+objectstore_name: "ceph-objectstore"
+objectstore_gateway_port: 80
+objectstore_nodeport: 30080
+objectstore_instances: 1
+objectstore_resources:
+  requests:
+    cpu: "1000m"
+    memory: "1Gi"
+
+objectstore_storage_class_enabled: true
+objectstore_storage_class_name: "rook-ceph-bucket"
+objectstore_storage_class_reclaim_policy: "Delete"
+objectstore_storage_class_volume_binding_mode: "Immediate"
+
+storage_use_all_nodes: true
+storage_use_all_devices: true
+storage_directories: []
+
+monitoring_enabled: true
+create_prometheus_rules: true
+
+csi_enable_rbd_driver: false
+csi_enable_cephfs_driver: false
+csi_enable_rbd_snapshotter: false
+csi_enable_cephfs_snapshotter: false
+csi_enable_nfs_snapshotter: false
+csi_provisioner_replicas: 1
+csi_plugin_selinux_host_mount: false
+csi_encryption_enabled: false
+
+csi_resources:
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+  limits:
+    cpu: "1000m"
+    memory: "1Gi"
+
+image_pull_secrets:
+  - name: docker-registry

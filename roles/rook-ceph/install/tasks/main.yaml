@@ -1,0 +1,220 @@
+- name: Add Rook-Ceph chart repository
+  kubernetes.core.helm_repository:
+    name: rook-ceph
+    repo_url: https://charts.rook.io/release
+
+- name: Install Rook-Ceph Operator
+  kubernetes.core.helm:
+    name: rook-ceph
+    chart_ref: rook-ceph/rook-ceph
+    chart_version: "{{ rook_ceph_operator_version }}"
+    create_namespace: true
+    release_namespace: "{{ rook_ceph_namespace }}"
+    values:
+      crds:
+        enabled: true
+      logLevel: INFO
+      enableDiscoveryDaemon: true
+      discoveryDaemonInterval: 60m
+      csi:
+        enableRbdDriver: "{{ csi_enable_rbd_driver }}"
+        enableCephfsDriver: "{{ csi_enable_cephfs_driver }}"
+        enableCSIHostNetwork: false
+        enableCephfsSnapshotter: "{{ csi_enable_cephfs_snapshotter }}"
+        enableNFSSnapshotter: "{{ csi_enable_nfs_snapshotter }}"
+        enableRBDSnapshotter: "{{ csi_enable_rbd_snapshotter }}"
+        enablePluginSelinuxHostMount: "{{ csi_plugin_selinux_host_mount }}"
+        enableCSIEncryption: "{{ csi_encryption_enabled }}"
+        provisionerReplicas: "{{ csi_provisioner_replicas }}"
+        clusterName: "{{ rook_ceph_cluster_name }}"
+        logLevel: 4
+        sidecarLogLevel: 4
+        resources: "{{ csi_resources }}"
+        serviceMonitor:
+          enabled: false
+        csiAddons:
+          enabled: false
+        nfs:
+          enabled: false
+        topology:
+          enabled: false
+        cephFSAttachRequired: false
+        rbdAttachRequired: false
+        nfsAttachRequired: false
+      monitoring:
+        enabled: "{{ monitoring_enabled }}"
+
+- name: Install Rook-Ceph Cluster
+  kubernetes.core.helm:
+    name: rook-ceph-cluster
+    chart_ref: rook-ceph/rook-ceph-cluster
+    chart_version: "{{ rook_ceph_cluster_version }}"
+    release_namespace: "{{ rook_ceph_namespace }}"
+    values:
+      operatorNamespace: "{{ rook_ceph_namespace }}"
+      clusterName: "{{ rook_ceph_cluster_name }}"
+      configOverride: |
+        [global]
+        mon_allow_pool_delete = true
+        osd_pool_default_size = 2
+        osd_pool_default_min_size = 1
+
+        [client.rgw.{{ objectstore_name }}.a]
+        rgw_allow_notification_secrets_in_cleartext = true
+      toolbox:
+        enabled: true
+      monitoring:
+        enabled: "{{ monitoring_enabled }}"
+        # createPrometheusRules: "{{ create_prometheus_rules }}"
+      # imagePullSecrets: "{{ image_pull_secrets }}"
+      cephClusterSpec:
+        cephVersion:
+          image: "{{ ceph_image }}"
+          allowUnsupported: false
+        dataDirHostPath: /var/lib/rook
+        mon:
+          count: "{{ mon_count }}"
+          allowMultiplePerNode: "{{ mon_allow_multiple_per_node }}"
+        mgr:
+          count: "{{ mgr_count }}"
+          allowMultiplePerNode: "{{ mgr_allow_multiple_per_node }}"
+          modules:
+            - name: rook
+              enabled: true
+            - name: iostat
+              enabled: true
+        dashboard:
+          enabled: "{{ dashboard_enabled }}"
+          ssl: "{{ dashboard_ssl }}"
+          prometheusEndpoint: "{{ prometheus_endpoint if prometheus_endpoint | length > 0 else omit }}"
+          prometheusEndpointSSLVerify: false
+        network:
+          connections:
+            encryption:
+              enabled: false
+            compression:
+              enabled: false
+            requireMsgr2: false
+        crashCollector:
+          disable: false
+          daysToRetain: 30
+        logCollector:
+          enabled: false
+        cleanupPolicy:
+          confirmation: ""
+        removeOSDsIfOutAndSafeToRemove: false
+        storage:
+          useAllNodes: "{{ storage_use_all_nodes }}"
+          useAllDevices: "{{ storage_use_all_devices }}"
+          directories: "{{ storage_directories if storage_directories | length > 0 else omit }}"
+      cephObjectStores:
+        - name: "{{ objectstore_name }}"
+          spec:
+            metadataPool:
+              failureDomain: osd
+              replicated:
+                size: 2
+            dataPool:
+              failureDomain: osd
+              replicated:
+                size: 2
+            preservePoolsOnDelete: true
+            gateway:
+              port: "{{ objectstore_gateway_port }}"
+              resources: "{{ objectstore_resources }}"
+              instances: "{{ objectstore_instances }}"
+          storageClass:
+            enabled: "{{ objectstore_storage_class_enabled }}"
+            name: "{{ objectstore_storage_class_name }}"
+            reclaimPolicy: "{{ objectstore_storage_class_reclaim_policy }}"
+            volumeBindingMode: "{{ objectstore_storage_class_volume_binding_mode }}"
+            parameters:
+              region: ap-northeast-2
+      cephBlockPools: []
+      cephFileSystems: []
+      cephFileSystemVolumeSnapshotClass:
+        enabled: false
+      cephBlockPoolsVolumeSnapshotClass:
+        enabled: false
+
+- name: Create Ceph Dashboard Service
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: rook-ceph-mgr-dashboard-external
+        namespace: "{{ rook_ceph_namespace }}"
+        labels:
+          app: rook-ceph-mgr
+          rook_cluster: "{{ rook_ceph_cluster_name }}"
+      spec:
+        type: NodePort
+        ports:
+          - name: dashboard
+            port: 7000
+            protocol: TCP
+            nodePort: "{{ dashboard_nodeport }}"
+            targetPort: 7000
+        selector:
+          app: rook-ceph-mgr
+          rook_cluster: "{{ rook_ceph_cluster_name }}"
+          mgr_role: active
+  when: dashboard_enabled | bool
+
+- name: Create Ceph Object Store Service
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: rook-ceph-rgw-{{ objectstore_name }}-external
+        namespace: "{{ rook_ceph_namespace }}"
+        labels:
+          app: rook-ceph-rgw
+          rook_cluster: "{{ rook_ceph_cluster_name }}"
+      spec:
+        type: NodePort
+        ports:
+          - name: http
+            port: 80
+            protocol: TCP
+            nodePort: "{{ objectstore_nodeport }}"
+            targetPort: 8080
+        selector:
+          app: rook-ceph-rgw
+          ceph_daemon_id: "{{ objectstore_name }}"
+          rgw: "{{ objectstore_name }}"
+          rook_cluster: "{{ rook_ceph_cluster_name }}"
+          rook_object_store: "{{ objectstore_name }}"
+
+- name: Wait for Rook-Ceph Operator to be ready
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: rook-ceph-operator
+    namespace: "{{ rook_ceph_namespace }}"
+  register: operator_status
+  until: >
+    operator_status.resources | length > 0 and
+    operator_status.resources[0].status is defined and
+    operator_status.resources[0].status.readyReplicas is defined and
+    operator_status.resources[0].status.replicas is defined and
+    operator_status.resources[0].status.readyReplicas == operator_status.resources[0].status.replicas
+  retries: 30
+  delay: 10
+
+- name: Wait for Ceph Cluster to be ready
+  kubernetes.core.k8s_info:
+    kind: CephCluster
+    name: "{{ rook_ceph_cluster_name }}"
+    namespace: "{{ rook_ceph_namespace }}"
+  register: cluster_status
+  until: >
+    cluster_status.resources | length > 0 and
+    cluster_status.resources[0].status is defined and
+    cluster_status.resources[0].status.phase is defined and
+    cluster_status.resources[0].status.phase == "Ready"
+  retries: 60
+  delay: 30
