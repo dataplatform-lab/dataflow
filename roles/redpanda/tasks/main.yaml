@@ -1,0 +1,174 @@
+- name: Add redpanda chart repository
+  kubernetes.core.helm_repository:
+    name: redpanda
+    repo_url: https://charts.redpanda.com
+    force_update: true
+
+- name: Install redpanda
+  kubernetes.core.helm:
+    name: redpanda
+    chart_ref: redpanda/redpanda
+    chart_version: "{{ redpanda_chart_version }}"
+    release_namespace: redpanda
+    create_namespace: true
+    values:
+      image:
+        repository: docker.redpanda.com/redpandadata/redpanda
+        tag: "{{ redpanda_version }}"
+
+      rackAwareness:
+        enabled: false
+
+      console:
+        enabled: true
+
+      auth:
+        sasl:
+          enabled: true
+          mechanism: SCRAM-SHA-512
+          # secretRef: redpanda-users
+          users:
+            - name: redpanda
+              password: redpanda123
+              mechanism: SCRAM-SHA-512
+
+      config:
+        cluster:
+          auto_create_topics_enabled: true
+          default_topic_partitions: 1
+          default_topic_replications: 1
+        tunable:
+          log_retention_ms: 86400000
+          retention_bytes: 10737418240
+
+      logging:
+        logLevel: info
+        usageStats:
+          enabled: false
+
+      monitoring:
+        enabled: false
+        scrapeInterval: 30s
+
+      resources:
+        cpu:
+          cores: 1
+        memory:
+          enable_memory_locking: false
+          container:
+            min: 2.5Gi
+            max: 2.5Gi
+
+      storage:
+        persistentVolume:
+          enabled: true
+          size: 1Gi
+
+      statefulset:
+        replicas: "{{ redpanda_replicas }}"
+        updateStrategy:
+          type: RollingUpdate
+        budget:
+          maxUnavailable: 1
+
+      tls:
+        enabled: false
+        certs:
+          default:
+            caEnabled: false
+          external:
+            caEnabled: true
+
+      external:
+        service:
+          enabled: true
+        enabled: true
+
+        type: NodePort
+        addresses: "{{ redpanda_addresses }}"
+        externalDns:
+          enabled: false
+
+      listeners:
+        admin:
+          port: 9644
+          external:
+            default:
+              port: 9645
+              advertisedPorts:
+                - 31644
+              tls:
+                cert: external
+                requireClientAuth: false
+        kafka:
+          port: 9093
+          external:
+            default:
+              port: 9094
+              advertisedPorts:
+                - 31092
+              tls:
+                cert: external
+                requireClientAuth: false
+        rpc:
+          port: 33145
+
+        schemaRegistry:
+          enabled: true
+          port: 8081
+          external:
+            default:
+              port: 8084
+              advertisedPorts:
+                - 30081
+              tls:
+                cert: external
+                requireClientAuth: false
+        http:
+          port: 8082
+          external:
+            default:
+              port: 8083
+              advertisedPorts:
+                - 30082
+              tls:
+                cert: external
+                requireClientAuth: false
+
+- name: Wait redpanda pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    label_selectors:
+      - app.kubernetes.io/name=redpanda
+      - app.kubernetes.io/component=redpanda-statefulset
+    namespace: redpanda
+    wait: true
+    wait_condition:
+      type: Ready
+  register: result
+
+- name: Wait redpanda console pod
+  kubernetes.core.k8s_info:
+    kind: Pod
+    label_selectors:
+      - app.kubernetes.io/name=console
+    namespace: redpanda
+    wait: true
+    wait_condition:
+      type: Ready
+  register: result_console
+
+- name: Print redpanda pod information
+  debug:
+    msg: |-
+      Redpanda pods: {{ result.resources | length }}
+      Console pods: {{ result_console.resources | length }}
+      Pod details: {{ result.resources | map(attribute='metadata.name') | list }}
+
+- name: Check if redpanda pods are running
+  fail:
+    msg: |-
+      Redpanda installation failed. Expected {{ redpanda_replicas }} pod and 1 console pod,
+      found {{ result.resources | length }} compute pods and {{ result_console.resources | length }} console pods.
+  when: result.resources | length != redpanda_replicas or
+        result_console.resources | length != 1
