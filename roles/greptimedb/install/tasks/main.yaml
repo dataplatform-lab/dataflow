@@ -1,0 +1,22 @@
+- name: Add greptimedb chart repository
+  kubernetes.core.helm_repository:
+    name: greptimedb
+    repo_url: https://greptimeteam.github.io/helm-charts
+    force_update: true
+
+- name: Install greptimedb
+  kubernetes.core.helm:
+    name: greptimedb
+    chart_ref: greptimedb/greptimedb-standalone
+    release_namespace: greptimedb
+    create_namespace: true
+    values:
+      objectStorage:
+        credentials:
+          accessKeyId: "{{ greptimedb_s3_accesskey }}"
+          secretAccessKey: "{{ greptimedb_s3_secretkey }}"
+        s3:
+          region: "{{ greptimedb_s3_region }}"
+          bucket: "{{ greptimedb_s3_bucket }}"
+          endpoint: "{{ greptimedb_s3_endpoint }}"
+          root: "{{ greptimedb_s3_root }}"

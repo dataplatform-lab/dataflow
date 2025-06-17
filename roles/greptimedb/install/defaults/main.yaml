@@ -1,0 +1,6 @@
+greptimedb_s3_accesskey: minio
+greptimedb_s3_secretkey: minio123
+greptimedb_s3_region: default
+greptimedb_s3_endpoint: http://minio.minio.svc.cluster.local:9000
+greptimedb_s3_bucket: greptimedb
+greptimedb_s3_root: /

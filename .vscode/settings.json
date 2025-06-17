@@ -3,5 +3,6 @@
         "editor.autoIndent": "advanced",
         "editor.defaultFormatter": "redhat.vscode-yaml",
         "editor.formatOnSave": true
-    }
+    },
+    "ansible.python.interpreterPath": "/opt/homebrew/bin/python3"
 }

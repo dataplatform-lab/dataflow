@@ -28,6 +28,12 @@
   roles:
     - clickhouse
 
+- name: Install greptimedb
+  hosts: localhost
+  roles:
+    - greptimedb/prepare
+    - greptimedb/install
+
 - name: Install quickwit
   hosts: localhost
   roles:
