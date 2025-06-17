@@ -35,9 +35,9 @@
             headers:
               qw-otel-logs-index: otel-logs-v0_7
           otlphttp/metrics:
-            endpoint: https://greptimedb.greptimedb.svc.cluster.local/v1/otlp
+            endpoint: http://greptimedb.greptimedb.svc.cluster.local:4000/v1/otlp
             headers:
-              x-greptime-db-name: otel-metrics
+              x-greptime-db-name: public
           debug:
             verbosity: detailed
         receivers:

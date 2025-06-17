@@ -11,6 +11,7 @@
     release_namespace: greptimedb
     create_namespace: true
     values:
+      fullnameOverride: greptimedb
       objectStorage:
         credentials:
           accessKeyId: "{{ greptimedb_s3_accesskey }}"

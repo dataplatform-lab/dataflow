@@ -96,6 +96,12 @@
       provisioning:
         enabled: true
         buckets:
+          - name: greptimedb
+            region: ap-northeast-2
+            versioning: Suspended
+          - name: quickwit
+            region: ap-northeast-2
+            versioning: Suspended
           - name: risingwave
             region: ap-northeast-2
             versioning: Suspended

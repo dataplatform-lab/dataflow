@@ -31,21 +31,19 @@
 - name: Install greptimedb
   hosts: localhost
   roles:
-    - greptimedb/prepare
-    - greptimedb/install
+    - greptimedb
 
 - name: Install quickwit
   hosts: localhost
   roles:
-    - quickwit/prepare
-    - quickwit/install
+    - quickwit
 
 - name: Install opentelemetry
   hosts: localhost
   roles:
-    - opentelemetry/install
+    - opentelemetry
 
 - name: Install grafana
   hosts: localhost
   roles:
-    - grafana/install
+    - grafana

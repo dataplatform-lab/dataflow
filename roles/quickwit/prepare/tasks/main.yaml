@@ -1,5 +1,0 @@
-- name: Create quickwit bucket
-  shell: |
-    kubectl exec deploy/minio -n minio -- mc config host add local http://127.0.0.1:9000 minio minio123
-    kubectl exec deploy/minio -n minio -- mc mb local/quickwit
-    exit 0
