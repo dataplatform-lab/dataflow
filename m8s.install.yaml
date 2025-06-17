@@ -65,6 +65,11 @@
   roles:
     - minio
 
+- name: Install clickhouse
+  hosts: localhost
+  roles:
+    - clickhouse
+
 - name: Install quickwit
   hosts: master
   tags: quickwit
@@ -77,12 +82,6 @@
   tags: opentelemetry
   roles:
     - opentelemetry/install
-
-- name: Install prometheus
-  hosts: master
-  tags: prometheus
-  roles:
-    - prometheus/install
 
 - name: Install grafana
   hosts: master

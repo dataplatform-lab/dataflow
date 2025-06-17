@@ -39,11 +39,6 @@
   roles:
     - opentelemetry/install
 
-- name: Install prometheus
-  hosts: localhost
-  roles:
-    - prometheus/install
-
 - name: Install grafana
   hosts: localhost
   roles:
