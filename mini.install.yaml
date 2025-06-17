@@ -23,6 +23,11 @@
   roles:
     - minio
 
+- name: Install clickhouse
+  hosts: localhost
+  roles:
+    - clickhouse
+
 - name: Install quickwit
   hosts: localhost
   roles:

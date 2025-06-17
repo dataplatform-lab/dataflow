@@ -1,0 +1,4 @@
+clickhouse_auth_username: admin
+clickhouse_auth_password: admin
+clickhouse_shards: 2
+clickhouse_replicas: 3
