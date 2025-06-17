@@ -60,4 +60,4 @@
               processors:
                 - attributes/node
               exporters:
-                - clickhouse
+                - otlphttp/metrics
