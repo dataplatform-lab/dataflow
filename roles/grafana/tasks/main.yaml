@@ -28,3 +28,9 @@
               jsonData:
                 index: otel-logs-v0_7
                 logMessageField: body.message
+            - name: greptimedb
+              type: prometheus
+              url: http://greptimedb.greptimedb.svc.cluster.local:4000/v1/prometheus
+              httpHeaders:
+                - name: x-greptime-db-name
+                  value: public
