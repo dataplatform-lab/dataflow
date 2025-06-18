@@ -13,9 +13,12 @@
     values:
       crds:
         enabled: true
-      logLevel: INFO
+      logLevel: "{{ rook_log_level }}"
       enableDiscoveryDaemon: true
       discoveryDaemonInterval: 60m
+      operatorMetricsBindAddress: "{{ rook_operator_metrics_bind_address }}"
+      cephAllowLoopDevices: "{{ rook_ceph_allow_loop_devices }}"
+      useCSIOperator: "{{ rook_use_csi_operator }}"
       csi:
         enableRbdDriver: "{{ csi_enable_rbd_driver }}"
         enableCephfsDriver: "{{ csi_enable_cephfs_driver }}"
@@ -27,8 +30,6 @@
         enableCSIEncryption: "{{ csi_encryption_enabled }}"
         provisionerReplicas: "{{ csi_provisioner_replicas }}"
         clusterName: "{{ rook_ceph_cluster_name }}"
-        logLevel: 4
-        sidecarLogLevel: 4
         resources: "{{ csi_resources }}"
         serviceMonitor:
           enabled: false
@@ -56,30 +57,40 @@
       configOverride: |
         [global]
         mon_allow_pool_delete = true
-        osd_pool_default_size = 1
-        osd_pool_default_min_size = 1
+        osd_pool_default_size = {{ ceph_config_global_osd_pool_default_size }}
+        osd_pool_default_min_size = {{ ceph_config_global_osd_pool_default_min_size | default(1) }}
+        mon_warn_on_pool_no_redundancy = {{ ceph_config_global_mon_warn_on_pool_no_redundancy }}
+        bdev_flock_retry = {{ ceph_config_global_bdev_flock_retry }}
+        bluefs_buffered_io = {{ ceph_config_global_bluefs_buffered_io }}
+        mon_data_avail_warn = {{ ceph_config_global_mon_data_avail_warn }}
 
         [client.rgw.{{ objectstore_name }}.a]
         rgw_allow_notification_secrets_in_cleartext = true
       toolbox:
-        enabled: true
+        enabled: "{{ toolbox_enabled }}"
+        replicas: "{{ toolbox_replicas }}"
+        image: "{{ toolbox_image }}"
+        imagePullPolicy: "{{ toolbox_image_pull_policy }}"
+        dnsPolicy: "{{ toolbox_dns_policy }}"
+        serviceAccountName: "{{ toolbox_service_account_name }}"
+        securityContext: "{{ toolbox_security_context }}"
+        tolerations: "{{ toolbox_tolerations }}"
       monitoring:
         enabled: "{{ monitoring_enabled }}"
       cephClusterSpec:
         cephVersion:
           image: "{{ ceph_image }}"
-          allowUnsupported: false
+          allowUnsupported: true
         dataDirHostPath: /var/lib/rook
+        skipUpgradeChecks: "{{ skip_upgrade_checks }}"
         mon:
-          count: 1
-          allowMultiplePerNode: true
+          count: "{{ mon_count }}"
+          allowMultiplePerNode: "{{ mon_allow_multiple_per_node }}"
         mgr:
-          count: 1
-          allowMultiplePerNode: true
+          count: "{{ mgr_count }}"
+          allowMultiplePerNode: "{{ mgr_allow_multiple_per_node }}"
           modules:
             - name: rook
-              enabled: true
-            - name: iostat
               enabled: true
         dashboard:
           enabled: "{{ dashboard_enabled }}"
@@ -89,38 +100,50 @@
         network:
           connections:
             encryption:
-              enabled: false
+              enabled: "{{ network_encryption_enabled }}"
             compression:
-              enabled: false
-            requireMsgr2: false
+              enabled: "{{ network_compression_enabled }}"
+            requireMsgr2: "{{ network_require_msgr2 }}"
         crashCollector:
-          disable: false
+          disable: "{{ crash_collector_disable }}"
           daysToRetain: 30
         logCollector:
           enabled: false
         cleanupPolicy:
           confirmation: ""
         removeOSDsIfOutAndSafeToRemove: false
+        healthCheck:
+          daemonHealth:
+            mon:
+              interval: "{{ health_check_daemon_health_mon_interval }}"
+              timeout: "{{ health_check_daemon_health_mon_timeout }}"
+        priorityClassNames:
+          all: "{{ priority_class_names_all }}"
+          mgr: "{{ priority_class_names_mgr }}"
+        disruptionManagement:
+          managePodBudgets: "{{ disruption_management_manage_pod_budgets }}"
         storage:
-          useAllNodes: false
-          useAllDevices: false
+          useAllNodes: "{{ storage_use_all_nodes }}"
+          useAllDevices: "{{ storage_use_all_devices }}"
           nodes:
-            - name: "minikube"
+            - name: "{{ minikube_node_name | default('minikube') }}"
               devices:
-                - name: "/dev/nbd0"
-          allowDeviceClassUpdate: true
-          allowOsdCrushWeightUpdate: false
+                - name: "{{ minikube_device_path | default('/dev/nbd0') }}"
+          allowDeviceClassUpdate: "{{ storage_allow_device_class_update }}"
+          allowOsdCrushWeightUpdate: "{{ storage_allow_osd_crush_weight_update }}"
       cephObjectStores:
         - name: "{{ objectstore_name }}"
           spec:
             metadataPool:
               failureDomain: osd
               replicated:
-                size: 1
+                size: { { objectstore_metadata_pool_size | default(1) } }
+                requireSafeReplicaSize: false
             dataPool:
               failureDomain: osd
               replicated:
-                size: 1
+                size: { { objectstore_data_pool_size | default(1) } }
+                requireSafeReplicaSize: false
             preservePoolsOnDelete: true
             gateway:
               port: "{{ objectstore_gateway_port }}"
@@ -133,7 +156,15 @@
             volumeBindingMode: "{{ objectstore_storage_class_volume_binding_mode }}"
             parameters:
               region: ap-northeast-2
-      cephBlockPools: []
+      cephBlockPools:
+        - name: builtin-mgr
+          spec:
+            name: .mgr
+            replicated:
+              size: { { mgr_pool_size | default(1) } }
+              requireSafeReplicaSize: false
+          storageClass:
+            enabled: false
       cephFileSystems: []
       cephFileSystemVolumeSnapshotClass:
         enabled: false
@@ -221,3 +252,17 @@
     cluster_status.resources[0].status.phase == "Ready"
   retries: 60
   delay: 30
+
+- name: Create Ceph Object Store User (admin)
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: ceph.rook.io/v1
+      kind: CephObjectStoreUser
+      metadata:
+        name: admin
+        namespace: "{{ rook_ceph_namespace }}"
+      spec:
+        store: "{{ objectstore_name }}"
+        displayName: "admin"
+  when: objectstore_storage_class_enabled | bool

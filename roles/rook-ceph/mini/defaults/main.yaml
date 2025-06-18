@@ -9,7 +9,7 @@ ceph_image: "quay.io/ceph/ceph:v19.2.1"
 mon_count: 1
 mon_allow_multiple_per_node: true
 
-mgr_count: 2
+mgr_count: 1
 mgr_allow_multiple_per_node: true
 
 dashboard_enabled: true
@@ -49,3 +49,57 @@ csi_resources:
   limits:
     cpu: "1000m"
     memory: "1Gi"
+
+rook_log_level: "INFO"
+rook_operator_metrics_bind_address: "0"
+rook_ceph_allow_loop_devices: "false"
+rook_use_csi_operator: "false"
+
+skip_upgrade_checks: true
+crash_collector_disable: true
+health_check_daemon_health_mon_interval: "45s"
+health_check_daemon_health_mon_timeout: "600s"
+priority_class_names_all: "system-node-critical"
+priority_class_names_mgr: "system-cluster-critical"
+disruption_management_manage_pod_budgets: true
+
+ceph_config_global_osd_pool_default_size: "1"
+ceph_config_global_osd_pool_default_min_size: "1"
+ceph_config_global_mon_warn_on_pool_no_redundancy: "false"
+ceph_config_global_bdev_flock_retry: "20"
+ceph_config_global_bluefs_buffered_io: "false"
+ceph_config_global_mon_data_avail_warn: "10"
+
+network_encryption_enabled: false
+network_compression_enabled: false
+network_require_msgr2: false
+
+storage_use_all_nodes: false
+storage_use_all_devices: false
+storage_allow_device_class_update: true
+storage_allow_osd_crush_weight_update: false
+
+minikube_node_name: "minikube"
+minikube_device_path: "/dev/nbd0"
+
+objectstore_metadata_pool_size: 1
+objectstore_data_pool_size: 1
+mgr_pool_size: 1
+
+toolbox_enabled: true
+toolbox_replicas: 1
+toolbox_image: "quay.io/ceph/ceph:v19.2.1"
+toolbox_image_pull_policy: "IfNotPresent"
+toolbox_dns_policy: "ClusterFirstWithHostNet"
+toolbox_service_account_name: "rook-ceph-default"
+toolbox_security_context:
+  runAsNonRoot: true
+  runAsUser: 2016
+  runAsGroup: 2016
+  capabilities:
+    drop: ["ALL"]
+toolbox_tolerations:
+  - key: "node.kubernetes.io/unreachable"
+    operator: "Exists"
+    effect: "NoExecute"
+    tolerationSeconds: 5
