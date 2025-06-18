@@ -1,8 +1,9 @@
 redpanda_chart_version: 5.10.2
 redpanda_version: v25.1.1
+redpanda_root_user: redpanda
+redpanda_root_password: redpanda123
 redpanda_replicas: 3
-redpanda_addresses:
-  - 127.0.0.1
+redpanda_addresses: [127.0.0.1]
 redpanda_requests_cpu: 100m
 redpanda_requests_memory: 250Mi
 redpanda_limits_memory: 1Gi
