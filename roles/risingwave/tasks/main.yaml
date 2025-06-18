@@ -168,8 +168,8 @@
           scheme: http
 
       auth:
-        rootUser: root
-        rootPassword: root123
+        rootUser: "{{ risingwave_root_username }}"
+        rootPassword: "{{ risingwave_root_password }}"
 
       databases: []
       wait: true
