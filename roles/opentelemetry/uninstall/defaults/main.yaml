@@ -1,0 +1,4 @@
+---
+# OpenTelemetry uninstall defaults
+opentelemetry_release_name: otel-collector
+opentelemetry_namespace: opentelemetry

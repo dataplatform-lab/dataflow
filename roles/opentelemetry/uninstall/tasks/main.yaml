@@ -1,0 +1,14 @@
+- name: Uninstall opentelemetry
+  kubernetes.core.helm:
+    name: otel-collector
+    state: absent
+    release_namespace: opentelemetry
+
+- name: Remove opentelemetry namespace
+  kubernetes.core.k8s:
+    state: absent
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: opentelemetry
