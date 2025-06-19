@@ -1,49 +1,78 @@
 - name: Install local-path-provisioner
   hosts: localhost
+  tags: localpath
   roles:
     - localpath
 
 - name: Install gateway api
   hosts: localhost
+  tags: gateway
   roles:
     - gateway
 
 - name: Install certmanager
   hosts: localhost
+  tags: certmanager
   roles:
     - certmanager/install
 
 - name: Install self-signed cluster issuer
   hosts: localhost
+  tags: certmanager
   roles:
     - certmanager/selfsigned
 
 - name: Install minio
   hosts: localhost
+  tags: minio
   roles:
-    - minio
+    - minio/install
 
 - name: Install clickhouse
   hosts: localhost
+  tags: clickhouse
   roles:
     - clickhouse
 
 - name: Install greptimedb
   hosts: localhost
+  tags: greptimedb
   roles:
     - greptimedb
 
 - name: Install quickwit
   hosts: localhost
+  tags: quickwit
   roles:
     - quickwit
 
 - name: Install opentelemetry
   hosts: localhost
+  tags: opentelemetry
   roles:
-    - opentelemetry
+    - opentelemetry/install
 
 - name: Install grafana
   hosts: localhost
+  tags: grafana
   roles:
     - grafana
+
+- name: Prepare keycloak
+  hosts: localhost
+  tags: keycloak
+  roles:
+    - keycloak/prepare
+
+- name: Install keycloak
+  hosts: localhost
+  tags: keycloak
+  roles:
+    - keycloak/install
+
+- name: Install rook-ceph
+  hosts: localhost
+  tags: rook-ceph
+  when: install_rook_ceph | default(false)
+  roles:
+    - rook-ceph/mini
