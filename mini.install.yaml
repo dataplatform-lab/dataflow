@@ -58,16 +58,11 @@
   roles:
     - grafana
 
-- name: Prepare keycloak
-  hosts: localhost
-  tags: keycloak
-  roles:
-    - keycloak/prepare
-
 - name: Install keycloak
   hosts: localhost
   tags: keycloak
   roles:
+    - keycloak/prepare
     - keycloak/install
 
 # - name: Install rook-ceph
