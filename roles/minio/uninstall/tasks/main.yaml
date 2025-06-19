@@ -1,0 +1,14 @@
+- name: Uninstall minio
+  kubernetes.core.helm:
+    name: minio
+    state: absent
+    release_namespace: minio
+
+- name: Remove minio namespace
+  kubernetes.core.k8s:
+    state: absent
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: minio

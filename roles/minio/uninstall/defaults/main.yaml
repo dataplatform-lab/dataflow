@@ -1,0 +1,4 @@
+---
+# MinIO uninstall defaults
+minio_release_name: minio
+minio_namespace: minio
