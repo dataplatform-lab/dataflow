@@ -63,7 +63,7 @@
   hosts: master
   tags: minio
   roles:
-    - minio
+    - minio/install
 
 - name: Install clickhouse
   hosts: localhost
