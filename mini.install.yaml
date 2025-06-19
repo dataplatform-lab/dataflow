@@ -70,9 +70,14 @@
   roles:
     - keycloak/install
 
-- name: Install rook-ceph
+# - name: Install rook-ceph
+#   hosts: localhost
+#   tags: rook-ceph
+#   roles:
+#     - rook-ceph/mini
+
+- name: Install redpanda
   hosts: localhost
-  tags: rook-ceph
-  when: install_rook_ceph | default(false)
+  tags: redpanda
   roles:
-    - rook-ceph/mini
+    - redpanda
