@@ -18,6 +18,7 @@
     "editable": true,
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
+    "id": 1,
     "links": [],
     "panels": [
         {
@@ -35,8 +36,8 @@
         },
         {
             "datasource": {
-                "type": "prometheus",
-                "uid": "aep9em1ii0ao0c"
+                "name": "greptimedb",
+                "type": "prometheus"
             },
             "fieldConfig": {
                 "defaults": {
@@ -99,7 +100,7 @@
                 "showThresholdMarkers": true,
                 "sizing": "auto"
             },
-            "pluginVersion": "12.0.1",
+            "pluginVersion": "12.0.2",
             "targets": [
                 {
                     "datasource": {
@@ -176,7 +177,7 @@
                 "showThresholdMarkers": true,
                 "sizing": "auto"
             },
-            "pluginVersion": "12.0.1",
+            "pluginVersion": "12.0.2",
             "targets": [
                 {
                     "datasource": {
@@ -203,7 +204,6 @@
     "templating": {
         "list": [
             {
-                "allValue": "",
                 "allowCustomValue": false,
                 "current": {
                     "text": "minikube",
@@ -234,6 +234,6 @@
     },
     "timepicker": {},
     "timezone": "browser",
-    "title": "New dashboard",
-    "version": 0
+    "title": "k8s",
+    "version": 2
 }
