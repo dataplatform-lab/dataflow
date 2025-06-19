@@ -137,12 +137,12 @@
             metadataPool:
               failureDomain: osd
               replicated:
-                size: { { objectstore_metadata_pool_size | default(1) } }
+                size: "{{ objectstore_metadata_pool_size | default(1) }}"
                 requireSafeReplicaSize: false
             dataPool:
               failureDomain: osd
               replicated:
-                size: { { objectstore_data_pool_size | default(1) } }
+                size: "{{ objectstore_data_pool_size | default(1) }}"
                 requireSafeReplicaSize: false
             preservePoolsOnDelete: true
             gateway:
@@ -161,7 +161,7 @@
           spec:
             name: .mgr
             replicated:
-              size: { { mgr_pool_size | default(1) } }
+              size: "{{ mgr_pool_size | default(1) }}"
               requireSafeReplicaSize: false
           storageClass:
             enabled: false
