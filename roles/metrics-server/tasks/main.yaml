@@ -1,0 +1,35 @@
+- name: Add metrics-server chart repository
+  kubernetes.core.helm_repository:
+    name: metrics-server
+    repo_url: https://kubernetes-sigs.github.io/metrics-server/
+
+- name: Install metrics-server
+  kubernetes.core.helm:
+    name: metrics-server
+    chart_ref: metrics-server/metrics-server
+    chart_version: "{{ metrics_server_chart_version }}"
+    release_namespace: metrics-server
+    create_namespace: true
+    update_repo_cache: true
+    wait: true
+    values:
+      replicas: "{{ metrics_server_replicas }}"
+      containerPort: 10250
+      args:
+        - '--kubelet-insecure-tls'
+      metrics:
+        enabled: true
+      # ! needs prometheus CRD
+      # serviceMonitor:
+      #   enabled: true
+      apiService:
+        create: true
+        insecureSkipTLSVerify: true
+      service:
+        type: ClusterIP
+        ports:
+          https: 443
+      resources:
+        requests:
+          cpu: 100m
+          memory: 200Mi

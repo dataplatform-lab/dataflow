@@ -1,0 +1,2 @@
+metrics_server_chart_version: 3.12.2
+metrics_server_replicas: 1
