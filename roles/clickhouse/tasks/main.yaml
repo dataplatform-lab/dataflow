@@ -18,3 +18,10 @@
       auth:
         username: "{{ clickhouse_auth_username }}"
         password: "{{ clickhouse_auth_password }}"
+      resources:
+        requests:
+          cpu: 1
+          memory: 512Mi
+        limits:
+          cpu: 2
+          memory: 2048Mi
