@@ -10,6 +10,8 @@
     chart_ref: nvidia-device-plugin/nvidia-device-plugin
     release_namespace: nvidia
     create_namespace: true
+    update_repo_cache: true
+    wait: true
     values:
       migStrategy: "none"
       failOnInitError: "true"

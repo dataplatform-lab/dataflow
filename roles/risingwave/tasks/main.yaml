@@ -11,6 +11,8 @@
     chart_version: "{{ risingwave_version }}"
     release_namespace: risingwave
     create_namespace: true
+    update_repo_cache: true
+    wait: true
     values:
       tags:
         bundle: false

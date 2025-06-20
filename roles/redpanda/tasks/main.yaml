@@ -11,6 +11,7 @@
     release_namespace: redpanda
     create_namespace: true
     update_repo_cache: true
+    wait: true
     values:
       image:
         repository: docker.redpanda.com/redpandadata/redpanda

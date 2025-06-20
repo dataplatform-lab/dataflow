@@ -10,6 +10,8 @@
     chart_ref: infisical/infisical-standalone
     release_namespace: infisical
     create_namespace: true
+    update_repo_cache: true
+    wait: true
     values:
       nameOverride: infisical
       fullnameOverride: infisical
@@ -23,7 +25,7 @@
         replicaCount: 2
         image:
           repository: infisical/infisical
-          tag: "{{infisical_image_tag}}"
+          tag: "{{ infisical_image_tag }}"
           pullPolicy: IfNotPresent
         affinity: {}
         kubeSecretRef: infisical-secrets

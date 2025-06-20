@@ -10,6 +10,8 @@
     chart_version: "{{ keycloak_version }}"
     create_namespace: true
     release_namespace: keycloak
+    update_repo_cache: true
+    wait: true
     values:
       auth:
         adminUser: "{{ keycloak_admin_username }}"

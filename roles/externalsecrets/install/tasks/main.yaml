@@ -10,3 +10,5 @@
     chart_ref: external-secrets/external-secrets
     release_namespace: external-secrets
     create_namespace: true
+    update_repo_cache: true
+    wait: true

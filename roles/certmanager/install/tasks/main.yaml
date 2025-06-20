@@ -11,6 +11,8 @@
     chart_version: "{{ certmanager_version }}"
     release_namespace: cert-manager
     create_namespace: true
+    update_repo_cache: true
+    wait: true
     values:
       installCRDs: true
       featureGates: "ExperimentalGatewayAPISupport=True"

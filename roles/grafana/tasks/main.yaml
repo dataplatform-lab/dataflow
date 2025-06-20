@@ -10,6 +10,8 @@
     chart_ref: grafana/grafana
     release_namespace: grafana
     create_namespace: true
+    update_repo_cache: true
+    wait: true
     values:
       plugins:
         - https://github.com/quickwit-oss/quickwit-datasource/releases/download/v0.4.6/quickwit-quickwit-datasource-0.4.6.zip;quickwit-quickwit-datasource

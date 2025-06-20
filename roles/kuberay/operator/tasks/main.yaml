@@ -8,6 +8,8 @@
   kubernetes.core.helm:
     name: kuberay-operator
     chart_ref: kuberay/kuberay-operator
-    chart_version: "{{kuberay_version}}"
+    chart_version: "{{ kuberay_version }}"
     release_namespace: kuberay
     create_namespace: true
+    update_repo_cache: true
+    wait: true

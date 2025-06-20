@@ -10,6 +10,8 @@
     chart_ref: clickhouse/clickhouse
     release_namespace: clickhouse
     create_namespace: true
+    update_repo_cache: true
+    wait: true
     values:
       shards: "{{ clickhouse_shards }}"
       replicaCount: "{{ clickhouse_replicas }}"

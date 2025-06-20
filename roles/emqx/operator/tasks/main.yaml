@@ -10,6 +10,8 @@
     chart_ref: emqx/emqx-operator
     release_namespace: emqx
     create_namespace: true
+    update_repo_cache: true
+    wait: true
 
 - name: Wait emqx operator pod
   kubernetes.core.k8s_info:

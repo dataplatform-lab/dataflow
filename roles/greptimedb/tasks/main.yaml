@@ -10,6 +10,8 @@
     chart_ref: greptimedb/greptimedb-standalone
     release_namespace: greptimedb
     create_namespace: true
+    update_repo_cache: true
+    wait: true
     values:
       fullnameOverride: greptimedb
       objectStorage:

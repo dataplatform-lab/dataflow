@@ -11,6 +11,8 @@
     chart_version: "{{ postgresql_version }}"
     release_namespace: postgresql-ha
     create_namespace: true
+    update_repo_cache: true
+    wait: true
     values:
       global:
         postgresql:

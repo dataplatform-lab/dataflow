@@ -10,6 +10,8 @@
     chart_ref: cilium/cilium
     chart_version: "{{ cilium_version }}"
     release_namespace: kube-system
+    update_repo_cache: true
+    wait: true
     values:
       k8sServiceHost: "{{ k8s_apiserver_ip }}"
       k8sServicePort: 6443
